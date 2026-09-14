@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BPMS Admin Portal - Ogun State Billing & Payment Management</title>
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.12/css/all.css">
+  <link rel="stylesheet" href="https://pay.ogunstate.gov.ng/css/bootstrap.css">
+  <link rel="stylesheet" href="https://pay.ogunstate.gov.ng/css/animate.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    :root {
+      --primary: #1b5e20;
+      --primary-dark: #0f3813;
+      --primary-light: #2e7d32;
+      --accent: #f9a825;
+      --accent-light: #fff8e1;
+      --bg-body: #f4f7f6;
+      --surface: #ffffff;
+      --text-main: #212529;
+      --text-muted: #6c757d;
+      --border-color: #e2e8f0;
+    }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg-body);
+      color: var(--text-main);
+      margin: 0;
+      padding: 0;
+    }
+    /* Top Header */
+    .admin-header {
+      background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%);
+      color: #ffffff;
+      padding: 1rem 0;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .admin-header .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .admin-header img {
+      height: 44px;
+      width: auto;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    }
+    .admin-header .portal-title h1 {
+      font-size: 1.25rem;
+      font-weight: 800;
+      margin: 0;
+      letter-spacing: -0.02em;
+    }
+    .admin-header .portal-title span {
+      font-size: 0.8rem;
+      opacity: 0.9;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .admin-nav {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .admin-nav a, .admin-nav button {
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.875rem;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+    .btn-portal {
+      background: rgba(255,255,255,0.15);
+      color: #ffffff !important;
+      border: 1px solid rgba(255,255,255,0.25);
+      padding: 8px 16px;
+    }
+    .btn-portal:hover {
+      background: rgba(255,255,255,0.25);
+      transform: translateY(-1px);
+    }
+    .btn-new-bill {
+      background: var(--accent);
+      color: #1a1a1a !important;
+      border: none;
+      padding: 8px 18px;
+      box-shadow: 0 4px 10px rgba(249, 168, 37, 0.35);
+    }
+    .btn-new-bill:hover {
+      background: #f57f17;
+      color: #000000 !important;
+      transform: translateY(-1px);
+    }
+    
+    /* Stats Cards */
+    .stat-card {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 1.25rem;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+    }
+    .stat-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+    }
+    .icon-green { background: #e8f5e9; color: #2e7d32; }
+    .icon-blue { background: #e3f2fd; color: #1565c0; }
+    .icon-amber { background: #fff8e1; color: #f57f17; }
+    .icon-purple { background: #f3e5f5; color: #7b1fa2; }
+    .stat-info h3 {
+      font-size: 1.4rem;
+      font-weight: 800;
+      margin: 0 0 2px 0;
+      color: var(--text-main);
+    }
+    .stat-info p {
+      margin: 0;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    /* Main Container */
+    .dashboard-container {
+      padding: 2rem 0 4rem 0;
+    }
+
+    /* Data Table Card */
+    .table-card {
+      background: var(--surface);
+      border-radius: 14px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+      overflow: hidden;
+      margin-top: 1.5rem;
+    }
+    .table-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .table-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .table-title h2 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin: 0;
+    }
+    .table-title .badge-count {
+      background: #e8f5e9;
+      color: #2e7d32;
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+    .table-search {
+      position: relative;
+      min-width: 280px;
+    }
+    .table-search input {
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      padding: 8px 12px 8px 36px;
+      font-size: 0.875rem;
+      width: 100%;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .table-search input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.15);
+    }
+    .table-search i {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    /* Table styling */
+    .custom-table {
+      margin: 0;
+    }
+    .custom-table th {
+      background: #fafbfc;
+      color: #495057;
+      font-weight: 600;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      border-top: none;
+      border-bottom: 1px solid var(--border-color);
+      padding: 12px 16px;
+      white-space: nowrap;
+    }
+    .custom-table td {
+      padding: 14px 16px;
+      vertical-align: middle;
+      font-size: 0.9rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .custom-table tr:hover {
+      background-color: #f9fbf9;
+    }
+    .code-badge {
+      font-family: "SFMono-Regular", Consolas, Menlo, monospace;
+      font-weight: 700;
+      background: #f1f5f9;
+      color: #0f172a;
+      padding: 4px 8px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      border: 1px solid #e2e8f0;
+    }
+    .code-badge .copy-btn {
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 0.75rem;
+      transition: color 0.15s;
+    }
+    .code-badge .copy-btn:hover {
+      color: var(--primary);
+    }
+    .client-name {
+      font-weight: 700;
+      color: #1e293b;
+      display: block;
+    }
+    .client-sub {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+    .amount-text {
+      font-weight: 800;
+      color: #0f172a;
+    }
+    .status-badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 0.78rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s;
+    }
+    .status-badge.paid {
+      background: #e8f5e9;
+      color: #2e7d32;
+      border: 1px solid #c8e6c9;
+    }
+    .status-badge.paid:hover {
+      background: #c8e6c9;
+    }
+    .status-badge.pending {
+      background: #fff8e1;
+      color: #f57f17;
+      border: 1px solid #ffe082;
+    }
+    .status-badge.pending:hover {
+      background: #ffe082;
+    }
+    .action-btn-group {
+      display: flex;
+      gap: 6px;
+    }
+    .action-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--border-color);
+      background: #ffffff;
+      color: #475569;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-decoration: none;
+    }
+    .action-btn:hover {
+      color: #ffffff;
+      text-decoration: none;
+    }
+    .action-btn.view:hover { background: #2e7d32; border-color: #2e7d32; }
+    .action-btn.edit:hover { background: #0284c7; border-color: #0284c7; }
+    .action-btn.delete:hover { background: #dc2626; border-color: #dc2626; }
+
+    /* Modal Form Styles */
+    .modal-content {
+      border-radius: 16px;
+      border: none;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      overflow: hidden;
+    }
+    .modal-header {
+      background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%);
+      color: #ffffff;
+      padding: 1.25rem 1.75rem;
+      border-bottom: none;
+    }
+    .modal-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+    }
+    .modal-header .close {
+      color: #ffffff;
+      opacity: 0.8;
+      text-shadow: none;
+      font-size: 1.5rem;
+      outline: none;
+    }
+    .modal-header .close:hover { opacity: 1; }
+    .modal-body {
+      padding: 1.75rem;
+      background: #ffffff;
+    }
+    .form-group label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #334155;
+      margin-bottom: 6px;
+    }
+    .form-group .form-control {
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      padding: 10px 14px;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+    .form-group .form-control:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.15);
+    }
+    .input-code-wrap {
+      display: flex;
+      gap: 8px;
+    }
+    .btn-gen {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 0 14px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #334155;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-gen:hover {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+    .modal-footer {
+      padding: 1rem 1.75rem;
+      border-top: 1px solid var(--border-color);
+      background: #fafbfc;
+    }
+    .btn-submit-bill {
+      background: var(--primary);
+      color: #ffffff;
+      font-weight: 700;
+      padding: 10px 24px;
+      border-radius: 8px;
+      border: none;
+      transition: all 0.2s;
+    }
+    .btn-submit-bill:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--text-muted);
+    }
+    .empty-state i {
+      font-size: 3rem;
+      color: #cbd5e1;
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Admin Bar -->
+  <header class="admin-header">
+    <div class="container">
+      <div class="d-flex justify-content-between align-items-center">
+        <div class="logo-container">
+          <img src="https://pay.ogunstate.gov.ng/images/logo-notext.png" alt="Ogun State BPMS">
+          <div class="portal-title">
+            <h1>BPMS ADMIN CONSOLE</h1>
+            <span>Ogun State Billing &amp; Payment Management System</span>
+          </div>
+        </div>
+        <div class="admin-nav">
+          <a href="/" class="btn btn-portal">
+            <i class="fas fa-home mr-1"></i> Public Search
+          </a>
+          <button class="btn btn-new-bill" onclick="openCreateModal()">
+            <i class="fas fa-plus-circle mr-1"></i> Add Client Bill
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="container dashboard-container">
+    <!-- Summary Stats -->
+    <div class="row">
+      <div class="col-md-3 col-sm-6 mb-3">
+        <div class="stat-card">
+          <div class="stat-icon icon-blue">
+            <i class="fas fa-file-invoice-dollar"></i>
+          </div>
+          <div class="stat-info">
+            <h3 id="statTotalCount">0</h3>
+            <p>Total Bills</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6 mb-3">
+        <div class="stat-card">
+          <div class="stat-icon icon-green">
+            <i class="fas fa-money-bill-wave"></i>
+          </div>
+          <div class="stat-info">
+            <h3 id="statTotalAmount">₦0.00</h3>
+            <p>Total Billed</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6 mb-3">
+        <div class="stat-card">
+          <div class="stat-icon icon-purple">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <div class="stat-info">
+            <h3 id="statPaidCount">0</h3>
+            <p>Paid Invoices</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6 mb-3">
+        <div class="stat-card">
+          <div class="stat-icon icon-amber">
+            <i class="fas fa-clock"></i>
+          </div>
+          <div class="stat-info">
+            <h3 id="statPendingCount">0</h3>
+            <p>Pending Invoices</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bill Records Table -->
+    <div class="table-card">
+      <div class="table-header">
+        <div class="table-title">
+          <i class="fas fa-database text-success"></i>
+          <h2>Client Invoices &amp; Payment Records</h2>
+          <span class="badge-count" id="tableBadgeCount">0 records</span>
+        </div>
+        <div class="table-search">
+          <i class="fas fa-search"></i>
+          <input type="text" id="searchInput" placeholder="Search by Client Name or Payment Code..." onkeyup="filterBills()">
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table custom-table" id="billsTable">
+          <thead>
+            <tr>
+              <th>Payment Code</th>
+              <th>Client / Customer Name</th>
+              <th>Bill Description &amp; Ministry</th>
+              <th>Bill Date</th>
+              <th>Amount (₦)</th>
+              <th>Status</th>
+              <th class="text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="billsTableBody">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+
+      <div id="emptyState" class="empty-state" style="display: none;">
+        <i class="fas fa-folder-open"></i>
+        <h4>No Billing Records Found</h4>
+        <p>No client records match your search query, or database is currently empty.</p>
+        <button class="btn btn-new-bill mt-2" onclick="openCreateModal()">
+          <i class="fas fa-plus-circle mr-1"></i> Add First Bill
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create / Edit Bill Modal -->
+  <div class="modal fade" id="billModal" tabindex="-1" role="dialog" aria-labelledby="billModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="billModalLabel">
+            <i class="fas fa-file-invoice mr-2"></i> Add New Client / Customer Bill
+          </h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="closeModal()">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <form id="billForm" onsubmit="handleFormSubmit(event)">
+          <input type="hidden" id="editBillId">
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="paymentCode">Payment Code <span class="text-danger">*</span></label>
+                  <div class="input-code-wrap">
+                    <input type="text" class="form-control font-weight-bold" id="paymentCode" placeholder="e.g. 0094000056959" required>
+                    <button type="button" class="btn-gen" onclick="generateRandomCode()">
+                      <i class="fas fa-random mr-1"></i> Auto
+                    </button>
+                  </div>
+                  <small class="form-text text-muted">Unique 13-digit code searched on the home portal.</small>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="billNumber">Bill Reference Number</label>
+                  <div class="input-code-wrap">
+                    <input type="text" class="form-control" id="billNumber" placeholder="e.g. 13388027">
+                    <button type="button" class="btn-gen" onclick="generateRandomBillNumber()">
+                      <i class="fas fa-magic mr-1"></i> Gen
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-12">
+                <div class="form-group">
+                  <label for="billedTo">Client / Customer Name (Billed To) <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" id="billedTo" placeholder="e.g. MR ADEYEMI ADEMOLA or ABC VENTURES LTD" required>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="billDescription">Bill Description <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" id="billDescription" placeholder="e.g. MINIMUM TAX or LAND USE CHARGE" list="descSuggestions" required>
+                  <datalist id="descSuggestions">
+                    <option value="MINIMUM TAX">
+                    <option value="LAND USE CHARGE">
+                    <option value="BUSINESS PREMISES PERMIT">
+                    <option value="DEVELOPMENT LEVY">
+                    <option value="MOTOR VEHICLE LICENSE">
+                    <option value="SIGNAGE & ADVERTISEMENT">
+                  </datalist>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="ministry">Ministry / Agency <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" id="ministry" placeholder="e.g. Internal Revenue Service IRS" list="ministrySuggestions" required>
+                  <datalist id="ministrySuggestions">
+                    <option value="Internal Revenue Service IRS">
+                    <option value="Ministry of Finance">
+                    <option value="Ministry of Commerce & Industry">
+                    <option value="Ministry of Transportation">
+                    <option value="Ministry of Physical Planning">
+                  </datalist>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="service">Service Subcategory</label>
+                  <input type="text" class="form-control" id="service" placeholder="e.g. Minimum Tax or Assessment Fee">
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="billDate">Bill Date</label>
+                  <input type="text" class="form-control" id="billDate" placeholder="e.g. 7th April, 2026">
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="amount">Billed Amount (NGN ₦) <span class="text-danger">*</span></label>
+                  <div class="input-group">
+                    <div class="input-group-prepend">
+                      <span class="input-group-text font-weight-bold">₦</span>
+                    </div>
+                    <input type="number" step="0.01" min="0" class="form-control" id="amount" placeholder="10100.00" required>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="status">Payment Status <span class="text-danger">*</span></label>
+                  <select class="form-control" id="status" required>
+                    <option value="Paid">Paid (Validated)</option>
+                    <option value="Pending">Pending (Unpaid)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+            <button type="submit" class="btn btn-submit-bill" id="btnSaveBill">
+              <i class="fas fa-save mr-1"></i> Save to Database
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://pay.ogunstate.gov.ng/js/jquery.min.js"></script>
+  <script src="https://pay.ogunstate.gov.ng/js/guest/js/popper.min.js"></script>
+  <script src="https://pay.ogunstate.gov.ng/js/guest/js/bootstrap.min.js"></script>
+
+  <script>
+    let allBills = [];
+
+    // Format Currency
+    function formatNaira(num) {
+      return '₦' + parseFloat(num || 0).toLocaleString('en-NG', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+
+    // Format Date for default display
+    function getTodayFormatted() {
+      const now = new Date();
+      const day = now.getDate();
+      const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+      let suffix = 'th';
+      if (day === 1 || day === 21 || day === 31) suffix = 'st';
+      else if (day === 2 || day === 22) suffix = 'nd';
+      else if (day === 3 || day === 23) suffix = 'rd';
+      return `${day}${suffix} ${monthNames[now.getMonth()]}, ${now.getFullYear()}`;
+    }
+
+    // Generate random 13-digit payment code like 00940000xxxxx
+    function generateRandomCode() {
+      const randomPart = Math.floor(10000 + Math.random() * 90000);
+      document.getElementById('paymentCode').value = '00940000' + randomPart;
+    }
+
+    // Generate random 8-digit bill reference number
+    function generateRandomBillNumber() {
+      document.getElementById('billNumber').value = Math.floor(10000000 + Math.random() * 90000000);
+    }
+
+    // Load Stats and Table
+    async function loadDashboard() {
+      try {
+        const [statsRes, billsRes] = await Promise.all([
+          fetch('/api/stats').then(r => r.json()),
+          fetch('/api/bills').then(r => r.json())
+        ]);
+
+        if (statsRes.success) {
+          document.getElementById('statTotalCount').innerText = statsRes.stats.totalCount;
+          document.getElementById('statTotalAmount').innerText = formatNaira(statsRes.stats.totalAmount);
+          document.getElementById('statPaidCount').innerText = statsRes.stats.paidCount;
+          document.getElementById('statPendingCount').innerText = statsRes.stats.pendingCount;
+        }
+
+        if (billsRes.success) {
+          allBills = billsRes.bills;
+          renderBillsTable(allBills);
+        }
+      } catch (err) {
+        console.error('Failed to load dashboard:', err);
+      }
+    }
+
+    // Render Table Rows
+    function renderBillsTable(bills) {
+      const tbody = document.getElementById('billsTableBody');
+      const emptyState = document.getElementById('emptyState');
+      const countBadge = document.getElementById('tableBadgeCount');
+
+      countBadge.innerText = `${bills.length} record${bills.length === 1 ? '' : 's'}`;
+
+      if (!bills || bills.length === 0) {
+        tbody.innerHTML = '';
+        emptyState.style.display = 'block';
+        return;
+      }
+
+      emptyState.style.display = 'none';
+      let html = '';
+
+      bills.forEach(bill => {
+        const cleanCode = bill.payment_code.replace(/^#+/, '');
+        const isPaid = (bill.status || '').toLowerCase() === 'paid';
+        const statusClass = isPaid ? 'paid' : 'pending';
+        const statusIcon = isPaid ? 'fa-check' : 'fa-hourglass-half';
+
+        html += `
+          <tr>
+            <td>
+              <span class="code-badge">
+                #${cleanCode}
+                <i class="far fa-copy copy-btn" title="Copy Payment Code" onclick="copyCode('${cleanCode}')"></i>
+              </span>
+            </td>
+            <td>
+              <span class="client-name">${escapeHtml(bill.billed_to)}</span>
+              <span class="client-sub">Ref #${escapeHtml(bill.bill_number)}</span>
+            </td>
+            <td>
+              <strong>${escapeHtml(bill.bill_description)}</strong>
+              <div class="client-sub">${escapeHtml(bill.ministry)}</div>
+            </td>
+            <td>${escapeHtml(bill.bill_date)}</td>
+            <td class="amount-text">${formatNaira(bill.amount)}</td>
+            <td>
+              <span class="status-badge ${statusClass}" title="Click to toggle status" onclick="toggleStatus(${bill.id}, '${bill.status}')">
+                <i class="fas ${statusIcon}"></i> ${bill.status}
+              </span>
+            </td>
+            <td class="text-right">
+              <div class="action-btn-group justify-content-end">
+                <a href="/validate-payment-code.html?code=${encodeURIComponent(cleanCode)}" target="_blank" class="action-btn view" title="View Customer Bill Page">
+                  <i class="fas fa-external-link-alt"></i>
+                </a>
+                <button type="button" class="action-btn edit" title="Edit Bill Details" onclick="openEditModal(${bill.id})">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button type="button" class="action-btn delete" title="Delete Record" onclick="deleteBillRecord(${bill.id}, '${cleanCode}')">
+                  <i class="fas fa-trash-alt"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+
+      tbody.innerHTML = html;
+    }
+
+    // Filter table
+    function filterBills() {
+      const q = document.getElementById('searchInput').value.toLowerCase().trim();
+      if (!q) {
+        renderBillsTable(allBills);
+        return;
+      }
+      const filtered = allBills.filter(b => 
+        b.billed_to.toLowerCase().includes(q) ||
+        b.payment_code.toLowerCase().includes(q) ||
+        b.bill_description.toLowerCase().includes(q) ||
+        b.ministry.toLowerCase().includes(q) ||
+        (b.bill_number && b.bill_number.toLowerCase().includes(q))
+      );
+      renderBillsTable(filtered);
+    }
+
+    // Copy code helper
+    function copyCode(code) {
+      navigator.clipboard.writeText(code).then(() => {
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          title: `Copied #${code}`,
+          showConfirmButton: false,
+          timer: 1500
+        });
+      });
+    }
+
+    // Open Modal for Create
+    function openCreateModal() {
+      document.getElementById('billForm').reset();
+      document.getElementById('editBillId').value = '';
+      document.getElementById('billModalLabel').innerHTML = '<i class="fas fa-plus-circle mr-2"></i> Add New Client / Customer Bill';
+      document.getElementById('btnSaveBill').innerHTML = '<i class="fas fa-save mr-1"></i> Save to Database';
+      document.getElementById('billDate').value = getTodayFormatted();
+      document.getElementById('status').value = 'Paid';
+      generateRandomCode();
+      generateRandomBillNumber();
+      $('#billModal').modal('show');
+    }
+
+    // Open Modal for Edit
+    function openEditModal(id) {
+      const bill = allBills.find(b => b.id === id);
+      if (!bill) return;
+
+      document.getElementById('editBillId').value = bill.id;
+      document.getElementById('paymentCode').value = bill.payment_code.replace(/^#+/, '');
+      document.getElementById('billNumber').value = bill.bill_number ? bill.bill_number.replace(/^#+/, '') : '';
+      document.getElementById('billedTo').value = bill.billed_to;
+      document.getElementById('billDescription').value = bill.bill_description;
+      document.getElementById('ministry').value = bill.ministry;
+      document.getElementById('service').value = bill.service || '';
+      document.getElementById('billDate').value = bill.bill_date;
+      document.getElementById('amount').value = bill.amount;
+      document.getElementById('status').value = bill.status;
+
+      document.getElementById('billModalLabel').innerHTML = '<i class="fas fa-edit mr-2"></i> Edit Bill Record';
+      document.getElementById('btnSaveBill').innerHTML = '<i class="fas fa-save mr-1"></i> Update Record';
+      $('#billModal').modal('show');
+    }
+
+    function closeModal() {
+      $('#billModal').modal('hide');
+    }
+
+    // Form submission
+    async function handleFormSubmit(e) {
+      e.preventDefault();
+      const editId = document.getElementById('editBillId').value;
+      const isEdit = !!editId;
+
+      const payload = {
+        payment_code: document.getElementById('paymentCode').value.trim(),
+        bill_number: document.getElementById('billNumber').value.trim(),
+        billed_to: document.getElementById('billedTo').value.trim(),
+        bill_description: document.getElementById('billDescription').value.trim(),
+        ministry: document.getElementById('ministry').value.trim(),
+        service: document.getElementById('service').value.trim() || document.getElementById('billDescription').value.trim(),
+        bill_date: document.getElementById('billDate').value.trim() || getTodayFormatted(),
+        amount: parseFloat(document.getElementById('amount').value),
+        status: document.getElementById('status').value
+      };
+
+      try {
+        const url = isEdit ? `/api/bills/${editId}` : '/api/bills';
+        const method = isEdit ? 'PUT' : 'POST';
+
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          closeModal();
+          Swal.fire({
+            icon: 'success',
+            title: isEdit ? 'Bill Updated!' : 'Bill Created Successfully!',
+            text: `Payment code #${data.bill.payment_code} is now saved in the BPMS database.`,
+            confirmButtonColor: '#1b5e20'
+          });
+          loadDashboard();
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Failed to Save',
+            text: data.message || 'An error occurred while saving to database.',
+            confirmButtonColor: '#1b5e20'
+          });
+        }
+      } catch (err) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Network Error',
+          text: err.message,
+          confirmButtonColor: '#1b5e20'
+        });
+      }
+    }
+
+    // Toggle Paid <-> Pending
+    async function toggleStatus(id, currentStatus) {
+      const newStatus = currentStatus === 'Paid' ? 'Pending' : 'Paid';
+      try {
+        const res = await fetch(`/api/bills/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus })
+        });
+        const data = await res.json();
+        if (data.success) {
+          loadDashboard();
+        }
+      } catch (err) {
+        console.error('Error toggling status:', err);
+      }
+    }
+
+    // Delete Bill
+    async function deleteBillRecord(id, code) {
+      const result = await Swal.fire({
+        title: 'Delete Bill Record?',
+        text: `Are you sure you want to delete bill #${code}? This action cannot be undone.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it!'
+      });
+
+      if (result.isConfirmed) {
+        try {
+          const res = await fetch(`/api/bills/${id}`, { method: 'DELETE' });
+          const data = await res.json();
+          if (data.success) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Deleted!',
+              text: 'Bill record has been removed from the database.',
+              timer: 1500,
+              showConfirmButton: false
+            });
+            loadDashboard();
+          }
+        } catch (err) {
+          Swal.fire('Error', err.message, 'error');
+        }
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.toString()
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // Initial Load
+    document.addEventListener('DOMContentLoaded', loadDashboard);
+  </script>
+</body>
+</html>

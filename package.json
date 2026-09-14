@@ -1,0 +1,13 @@
+{
+  "name": "ogun-state-bpms",
+  "version": "1.0.0",
+  "description": "Ogun State Billing and Payments Management System with Admin & Database",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2"
+  }
+}

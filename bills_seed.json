@@ -1,0 +1,54 @@
+[
+  {
+    "id": 4,
+    "payment_code": "0094000099999",
+    "billed_to": "CHIEF TUNDE BAKARE",
+    "bill_description": "DEVELOPMENT LEVY & INFRASTRUCTURE",
+    "ministry": "Internal Revenue Service IRS",
+    "service": "Development Levy",
+    "bill_date": "12th September, 2026",
+    "bill_number": "48435552",
+    "amount": 75000,
+    "status": "Paid",
+    "created_at": "2026-09-12 20:18:48"
+  },
+  {
+    "id": 3,
+    "payment_code": "0094000056961",
+    "billed_to": "OLAWALE ENTERPRISES LTD",
+    "bill_description": "BUSINESS PREMISES PERMIT",
+    "ministry": "Ministry of Commerce & Industry",
+    "service": "Business Registration",
+    "bill_date": "12th April, 2026",
+    "bill_number": "13388029",
+    "amount": 50000,
+    "status": "Pending",
+    "created_at": "2026-09-12 20:13:34"
+  },
+  {
+    "id": 2,
+    "payment_code": "0094000056960",
+    "billed_to": "MRS FOLASHADE BALOGUN",
+    "bill_description": "LAND USE CHARGE",
+    "ministry": "Ministry of Finance",
+    "service": "Land Use & Building Assessment",
+    "bill_date": "10th April, 2026",
+    "bill_number": "13388028",
+    "amount": 35500,
+    "status": "Paid",
+    "created_at": "2026-09-12 20:13:34"
+  },
+  {
+    "id": 1,
+    "payment_code": "0094000056959",
+    "billed_to": "MR ADEYEMI ADEMOLA",
+    "bill_description": "MINIMUM TAX",
+    "ministry": "Internal Revenue Service IRS",
+    "service": "Minimum Tax",
+    "bill_date": "7th April, 2026",
+    "bill_number": "13388027",
+    "amount": 10100,
+    "status": "Paid",
+    "created_at": "2026-09-12 20:13:34"
+  }
+]

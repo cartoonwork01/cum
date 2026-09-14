@@ -327,12 +327,61 @@
             */
             offSetManager();
         });
-        $(document).on(&#39;click&#39;, &#39;a[href^=&#34;#map&#34;]&#39;, function (event) {
-            event.preventDefault();
-            $(&#39;html, body&#39;).animate({
-                scrollTop: $($.attr(this, &#39;href&#39;)).offset().top - 60
-            }, 500);
-        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="db-config.js"></script>
+    <script>
+      (async function loadBillDetails() {
+        try {
+          var params = new URLSearchParams(window.location.search);
+          var code = params.get('code');
+          if (!code) return;
+
+          var bill = await window.BPMS.getBillByCode(code);
+          if (!bill) {
+            var flash = document.querySelector('.flash-message');
+            if (flash) {
+              flash.innerHTML = '<div class="alert alert-danger text-center mx-auto" style="max-width: 600px; margin-top: 15px;"><strong>Payment Code Not Found:</strong> No record matches code <code>#' + code.replace(/[^a-zA-Z0-9]/g, '') + '</code>. <a href="index.html" class="alert-link">Search again</a></div>';
+            }
+            return;
+          }
+
+          var rows = document.querySelectorAll('table tbody tr');
+          rows.forEach(function(row) {
+            var th = row.querySelector('th');
+            var td = row.querySelector('td');
+            if (!th || !td) return;
+
+            var label = th.textContent.trim().toLowerCase();
+            if (label.indexOf('payment code') !== -1) {
+              td.textContent = '#' + bill.payment_code.replace(/^#+/, '');
+            } else if (label.indexOf('bill description') !== -1) {
+              td.textContent = bill.bill_description;
+            } else if (label.indexOf('billed to') !== -1) {
+              td.textContent = bill.billed_to;
+            } else if (label.indexOf('ministry') !== -1) {
+              td.textContent = bill.ministry;
+            } else if (label.indexOf('service') !== -1) {
+              td.textContent = bill.service || bill.bill_description;
+            } else if (label.indexOf('bill date') !== -1) {
+              td.textContent = bill.bill_date;
+            } else if (label.indexOf('bill number') !== -1) {
+              td.textContent = '#' + (bill.bill_number ? bill.bill_number.toString().replace(/^#+/, '') : '');
+            } else if (label.indexOf('billed amount') !== -1) {
+              td.textContent = parseFloat(bill.amount || 0).toLocaleString('en-NG', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+              });
+            } else if (label.indexOf('bill status') !== -1) {
+              var isPaid = (bill.status || '').toLowerCase() === 'paid';
+              td.textContent = bill.status;
+              td.className = (isPaid ? 'text-success' : 'text-warning') + ' text-right';
+            }
+          });
+        } catch (e) {
+          console.error('Error loading bill:', e);
+        }
+      })();
     </script>
   </body>
 </html>

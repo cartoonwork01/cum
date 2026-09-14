@@ -436,7 +436,7 @@
           </div>
         </div>
         <div class="admin-nav">
-          <a href="/" class="btn btn-portal">
+          <a href="index.html" class="btn btn-portal">
             <i class="fas fa-home mr-1"></i> Public Search
           </a>
           <button class="btn btn-new-bill" onclick="openCreateModal()">
@@ -674,9 +674,11 @@
     </div>
   </div>
 
-  <script src="https://pay.ogunstate.gov.ng/js/jquery.min.js"></script>
-  <script src="https://pay.ogunstate.gov.ng/js/guest/js/popper.min.js"></script>
-  <script src="https://pay.ogunstate.gov.ng/js/guest/js/bootstrap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="db-config.js"></script>
 
   <script>
     let allBills = [];
@@ -715,22 +717,18 @@
     // Load Stats and Table
     async function loadDashboard() {
       try {
-        const [statsRes, billsRes] = await Promise.all([
-          fetch('/api/stats').then(r => r.json()),
-          fetch('/api/bills').then(r => r.json())
+        const [stats, bills] = await Promise.all([
+          window.BPMS.getStats(),
+          window.BPMS.getAllBills()
         ]);
 
-        if (statsRes.success) {
-          document.getElementById('statTotalCount').innerText = statsRes.stats.totalCount;
-          document.getElementById('statTotalAmount').innerText = formatNaira(statsRes.stats.totalAmount);
-          document.getElementById('statPaidCount').innerText = statsRes.stats.paidCount;
-          document.getElementById('statPendingCount').innerText = statsRes.stats.pendingCount;
-        }
+        document.getElementById('statTotalCount').innerText = stats.totalCount;
+        document.getElementById('statTotalAmount').innerText = formatNaira(stats.totalAmount);
+        document.getElementById('statPaidCount').innerText = stats.paidCount;
+        document.getElementById('statPendingCount').innerText = stats.pendingCount;
 
-        if (billsRes.success) {
-          allBills = billsRes.bills;
-          renderBillsTable(allBills);
-        }
+        allBills = bills || [];
+        renderBillsTable(allBills);
       } catch (err) {
         console.error('Failed to load dashboard:', err);
       }
@@ -754,7 +752,7 @@
       let html = '';
 
       bills.forEach(bill => {
-        const cleanCode = bill.payment_code.replace(/^#+/, '');
+        const cleanCode = (bill.payment_code || '').toString().replace(/^#+/, '');
         const isPaid = (bill.status || '').toLowerCase() === 'paid';
         const statusClass = isPaid ? 'paid' : 'pending';
         const statusIcon = isPaid ? 'fa-check' : 'fa-hourglass-half';
@@ -784,7 +782,7 @@
             </td>
             <td class="text-right">
               <div class="action-btn-group justify-content-end">
-                <a href="/validate-payment-code.html?code=${encodeURIComponent(cleanCode)}" target="_blank" class="action-btn view" title="View Customer Bill Page">
+                <a href="pay.html?code=${encodeURIComponent(cleanCode)}" target="_blank" class="action-btn view" title="View Customer Bill Page">
                   <i class="fas fa-external-link-alt"></i>
                 </a>
                 <button type="button" class="action-btn edit" title="Edit Bill Details" onclick="openEditModal(${bill.id})">
@@ -810,11 +808,11 @@
         return;
       }
       const filtered = allBills.filter(b => 
-        b.billed_to.toLowerCase().includes(q) ||
-        b.payment_code.toLowerCase().includes(q) ||
-        b.bill_description.toLowerCase().includes(q) ||
-        b.ministry.toLowerCase().includes(q) ||
-        (b.bill_number && b.bill_number.toLowerCase().includes(q))
+        (b.billed_to && b.billed_to.toLowerCase().includes(q)) ||
+        (b.payment_code && b.payment_code.toLowerCase().includes(q)) ||
+        (b.bill_description && b.bill_description.toLowerCase().includes(q)) ||
+        (b.ministry && b.ministry.toLowerCase().includes(q)) ||
+        (b.bill_number && b.bill_number.toString().toLowerCase().includes(q))
       );
       renderBillsTable(filtered);
     }
@@ -848,19 +846,19 @@
 
     // Open Modal for Edit
     function openEditModal(id) {
-      const bill = allBills.find(b => b.id === id);
+      const bill = allBills.find(b => Number(b.id) === Number(id));
       if (!bill) return;
 
       document.getElementById('editBillId').value = bill.id;
-      document.getElementById('paymentCode').value = bill.payment_code.replace(/^#+/, '');
-      document.getElementById('billNumber').value = bill.bill_number ? bill.bill_number.replace(/^#+/, '') : '';
-      document.getElementById('billedTo').value = bill.billed_to;
-      document.getElementById('billDescription').value = bill.bill_description;
-      document.getElementById('ministry').value = bill.ministry;
+      document.getElementById('paymentCode').value = (bill.payment_code || '').toString().replace(/^#+/, '');
+      document.getElementById('billNumber').value = bill.bill_number ? bill.bill_number.toString().replace(/^#+/, '') : '';
+      document.getElementById('billedTo').value = bill.billed_to || '';
+      document.getElementById('billDescription').value = bill.bill_description || '';
+      document.getElementById('ministry').value = bill.ministry || '';
       document.getElementById('service').value = bill.service || '';
-      document.getElementById('billDate').value = bill.bill_date;
-      document.getElementById('amount').value = bill.amount;
-      document.getElementById('status').value = bill.status;
+      document.getElementById('billDate').value = bill.bill_date || '';
+      document.getElementById('amount').value = bill.amount || 0;
+      document.getElementById('status').value = bill.status || 'Paid';
 
       document.getElementById('billModalLabel').innerHTML = '<i class="fas fa-edit mr-2"></i> Edit Bill Record';
       document.getElementById('btnSaveBill').innerHTML = '<i class="fas fa-save mr-1"></i> Update Record';
@@ -890,39 +888,26 @@
       };
 
       try {
-        const url = isEdit ? `/api/bills/${editId}` : '/api/bills';
-        const method = isEdit ? 'PUT' : 'POST';
-
-        const res = await fetch(url, {
-          method,
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-
-        const data = await res.json();
-
-        if (res.ok && data.success) {
-          closeModal();
-          Swal.fire({
-            icon: 'success',
-            title: isEdit ? 'Bill Updated!' : 'Bill Created Successfully!',
-            text: `Payment code #${data.bill.payment_code} is now saved in the BPMS database.`,
-            confirmButtonColor: '#1b5e20'
-          });
-          loadDashboard();
+        let saved;
+        if (isEdit) {
+          saved = await window.BPMS.updateBill(editId, payload);
         } else {
-          Swal.fire({
-            icon: 'error',
-            title: 'Failed to Save',
-            text: data.message || 'An error occurred while saving to database.',
-            confirmButtonColor: '#1b5e20'
-          });
+          saved = await window.BPMS.createBill(payload);
         }
+
+        closeModal();
+        Swal.fire({
+          icon: 'success',
+          title: isEdit ? 'Bill Updated!' : 'Bill Created Successfully!',
+          text: `Payment code #${saved.payment_code} is saved in the database.`,
+          confirmButtonColor: '#1b5e20'
+        });
+        loadDashboard();
       } catch (err) {
         Swal.fire({
           icon: 'error',
-          title: 'Network Error',
-          text: err.message,
+          title: 'Failed to Save',
+          text: err.message || 'An error occurred while saving.',
           confirmButtonColor: '#1b5e20'
         });
       }
@@ -932,15 +917,8 @@
     async function toggleStatus(id, currentStatus) {
       const newStatus = currentStatus === 'Paid' ? 'Pending' : 'Paid';
       try {
-        const res = await fetch(`/api/bills/${id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: newStatus })
-        });
-        const data = await res.json();
-        if (data.success) {
-          loadDashboard();
-        }
+        await window.BPMS.updateBill(id, { status: newStatus });
+        loadDashboard();
       } catch (err) {
         console.error('Error toggling status:', err);
       }
@@ -960,18 +938,15 @@
 
       if (result.isConfirmed) {
         try {
-          const res = await fetch(`/api/bills/${id}`, { method: 'DELETE' });
-          const data = await res.json();
-          if (data.success) {
-            Swal.fire({
-              icon: 'success',
-              title: 'Deleted!',
-              text: 'Bill record has been removed from the database.',
-              timer: 1500,
-              showConfirmButton: false
-            });
-            loadDashboard();
-          }
+          await window.BPMS.deleteBill(id);
+          Swal.fire({
+            icon: 'success',
+            title: 'Deleted!',
+            text: 'Bill record has been removed from the database.',
+            timer: 1500,
+            showConfirmButton: false
+          });
+          loadDashboard();
         } catch (err) {
           Swal.fire('Error', err.message, 'error');
         }

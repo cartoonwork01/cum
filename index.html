@@ -268,11 +268,15 @@
             */
             offSetManager();
         });
-        $(document).on(&#39;click&#39;, &#39;a[href^=&#34;#map&#34;]&#39;, function (event) {
-            event.preventDefault();
-            $(&#39;html, body&#39;).animate({
-                scrollTop: $($.attr(this, &#39;href&#39;)).offset().top - 60
-            }, 500);
+        $(document).on('submit', 'form', function (event) {
+            var codeInput = $(this).find('input[name="payment_code"]');
+            if (codeInput.length) {
+                event.preventDefault();
+                var code = codeInput.val().trim().replace(/^#+/, '');
+                if (code) {
+                    window.location.href = 'pay.html?code=' + encodeURIComponent(code);
+                }
+            }
         });
     </script>
   </body>
